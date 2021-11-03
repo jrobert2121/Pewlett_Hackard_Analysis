@@ -1,7 +1,7 @@
 # Pewlett Hackard Analysis
 
 ## Project Overview
-Pewlett Hackard is looking toward the future as baby boomers are retiring at rapid rate.  They are offering retirement packages to eligible employees and also looking to prepare for several vacancies that will need to be filled as a result of retirements.  Pewlett Hackard had been using many excel files along with VBA but has recently decided to upgrade to SQL and build an employee database.  Using SQL, the number of retiring employees by title and identifying employees who are eligible to participate in a new mentorship program are needed.
+Pewlett Hackard is looking toward the future as baby boomers are retiring at a rapid rate.  They are offering retirement packages to eligible employees and also looking to prepare for several vacancies that will need to be filled as a result of retirements.  Pewlett Hackard had been using many excel files along with VBA but has recently decided to upgrade to SQL and build an employee database.  Using SQL, the number of retiring employees by title and identifying employees who are eligible to participate in a new mentorship program are needed.
 
 ## Purpose
 It must be determined how many of each role are eligible for retirement.  Then to assist in the creation of a mentorship program designed to help fill these positions, employees eligible for this program need to be identified.
@@ -14,7 +14,7 @@ It must be determined how many of each role are eligible for retirement.  Then t
 
 - To determine the number of employees by title who are eligible for retirement, a retirement titles table was created for employees with a birth date between January 1, 1952 and December 31, 1955.  However, due to several employees holding different titles throughout the years an Unique Titles table was created to remove duplicate employee entries and obtain the most recent position held.  From the Unique Titles table, it is then possible to perform a count on the employees and store the information in the Retiring Titles table.
 
-![Retiring Titles](Retiring Titles.png)
+![Retiring Titles](Retiring_Titles.png)
 
 - Of the 90,398 positions who are eligible for retirement, 64% hold senior level positions.  Losing these positions without an adequate succession plan would likely create a huge knowledge gap for the company and lack of leadership for the departments.
 
@@ -30,7 +30,7 @@ It must be determined how many of each role are eligible for retirement.  Then t
 
 
 ## Summary
-Provide high level responses to the following questions then provide 2 additional queries or tables that may provide more in sight into the upcoming silver tsunami
+
 -  As Pewlett Hackard's "silver tsunami" begins to make an impact, there are 90,398 roles that will need to be filled using the current criteria.  
 - There are enough retirement ready employees in the departments to mentor the next generation of employees.  We can determine which departments might be most affected by the impending silver tsunami by creating a table with retirees and their current departments and then running a query to count the retirees in each department.
 ```
@@ -56,3 +56,36 @@ INNER JOIN departments as d
 ON dr.dept_no = d.dept_no
 GROUP BY d.dept_name
 ```
+
+![Retiree counts](Retiree_count_by_dept.png)
+
+- Without an expansion of the mentorship eligibility factors, Pewlett Hackard will need to execute an extensive external hiring campaign in order to fill positions.  By expanding the criteria to beyond just the birth year of 1965, we can create a greater pool of potential participants for the mentorship program.
+
+```
+-- Create membership eligibility table with expanded birth date criteria
+SELECT DISTINCT ON (e.emp_no) e.emp_no,
+	e.first_name,
+	e.last_name,
+	e.birth_date,
+	de.from_date,
+	de.to_date,
+	t.title
+INTO Mentorship_Eligibility2
+FROM employees as e
+	INNER JOIN titles as t
+		ON (e.emp_no = t.emp_no)
+	INNER JOIN dept_emp as de
+		ON (e.emp_no = de.emp_no)
+WHERE (de.to_date = ('9999-01-01'))
+AND (e.birth_date BETWEEN '1960-01-01' AND '1965-12-31')
+ORDER BY e.emp_no ASC;
+```
+```
+-- Count of potential participants from expanded mentorship
+SELECT COUNT (me.emp_no), me.title
+FROM mentorship_eligibility2 AS me
+GROUP BY me.title
+ORDER BY COUNT (me.emp_no) DESC;
+```
+
+![Expanded Mentorship](expanded_mentorship.png)
